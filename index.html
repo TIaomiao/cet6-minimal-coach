@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CET-6 Minimal Coach</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">CET-6 Minimal Coach</p>
+        <h1>今天只完成一个最小闭环</h1>
+        <p class="hero-copy">35-45 分钟：听力一小段，表达一小段，打卡三分钟。</p>
+      </div>
+      <div class="hero-metrics" aria-label="今日概览">
+        <div class="metric">
+          <span class="metric-label">今天</span>
+          <strong id="todayText">--</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">距离六级</span>
+          <strong id="countdownText">--</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">连续打卡</span>
+          <strong id="streakText">0 天</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="main-grid">
+      <section class="panel task-panel" aria-labelledby="todayTasksTitle">
+        <div class="section-heading">
+          <p class="eyebrow">today plan</p>
+          <h2 id="todayTasksTitle">今日任务</h2>
+        </div>
+
+        <div class="task-list">
+          <label class="task-item" for="taskListening">
+            <input id="taskListening" type="checkbox" data-task="listening">
+            <span class="task-body">
+              <span class="task-title">听力 20 分钟</span>
+              <span class="task-detail">做一小段六级听力 -> 对答案 -> 找答案句 -> 标记错因</span>
+            </span>
+          </label>
+
+          <label class="task-item" for="taskExpression">
+            <input id="taskExpression" type="checkbox" data-task="expression">
+            <span class="task-body">
+              <span class="task-title" id="expressionTaskTitle">写作/翻译 15 分钟</span>
+              <span class="task-detail" id="expressionTaskDetail">按今天的星期自动切换</span>
+            </span>
+          </label>
+
+          <label class="task-item" for="taskReflection">
+            <input id="taskReflection" type="checkbox" data-task="reflection">
+            <span class="task-body">
+              <span class="task-title">打卡 3 分钟</span>
+              <span class="task-detail">写下今天完成了什么、错在哪里、明天要注意什么</span>
+            </span>
+          </label>
+        </div>
+      </section>
+
+      <section class="panel feedback-panel" aria-labelledby="feedbackTitle">
+        <div class="section-heading">
+          <p class="eyebrow">quick notes</p>
+          <h2 id="feedbackTitle">今日反馈</h2>
+        </div>
+
+        <fieldset class="choice-group">
+          <legend>听力错因</legend>
+          <div class="chip-grid" id="listeningReasons"></div>
+        </fieldset>
+
+        <fieldset class="choice-group">
+          <legend id="expressionIssuesTitle">写作/翻译问题</legend>
+          <div class="chip-grid" id="expressionIssues"></div>
+        </fieldset>
+
+        <label class="text-field" for="summaryInput">
+          <span>今日总结</span>
+          <textarea id="summaryInput" rows="4" placeholder="例如：听力错在没有提前圈关键词，翻译卡在主谓一致和搭配。"></textarea>
+        </label>
+
+        <label class="text-field" for="tomorrowInput">
+          <span>明天注意事项</span>
+          <textarea id="tomorrowInput" rows="3" placeholder="例如：听力先看题干关键词，翻译先检查主语和谓语。"></textarea>
+        </label>
+
+        <div class="bridge-box" aria-labelledby="gptBridgeTitle">
+          <div class="section-heading compact-heading">
+            <p class="eyebrow">GPT bridge</p>
+            <h2 id="gptBridgeTitle">GPT 反馈桥</h2>
+          </div>
+          <p class="bridge-copy">把 GPT 网页端或 iOS 端的反馈按模板输出成 JSON，粘到这里即可写入今天。</p>
+          <label class="text-field" for="gptFeedbackInput">
+            <span>GPT 反馈或 JSON</span>
+            <textarea id="gptFeedbackInput" rows="5" placeholder='建议让 GPT 只输出 JSON，例如 {"listeningReasons":["没定位"],"expressionIssues":["主谓不一致","单复数误用"],"summary":"...","tomorrowFocus":"..."}'></textarea>
+          </label>
+          <div class="button-row bridge-actions">
+            <button class="button primary" id="importGptButton" type="button">导入 GPT 记录</button>
+            <button class="button secondary" id="copyPromptButton" type="button">复制 GPT 模板</button>
+            <button class="button secondary" id="copyTodayButton" type="button">复制今日 JSON</button>
+          </div>
+        </div>
+
+        <p class="save-status" id="saveStatus" aria-live="polite">尚未修改</p>
+      </section>
+
+      <aside class="side-column">
+        <section class="panel stats-panel" aria-labelledby="sevenDaysTitle">
+          <div class="section-heading">
+            <p class="eyebrow">last 7 days</p>
+            <h2 id="sevenDaysTitle">最近 7 天</h2>
+          </div>
+          <div class="week-strip" id="recentDays"></div>
+        </section>
+
+        <section class="panel stats-panel" aria-labelledby="commonIssuesTitle">
+          <div class="section-heading">
+            <p class="eyebrow">this week</p>
+            <h2 id="commonIssuesTitle">本周最常见问题</h2>
+          </div>
+          <ol class="issue-list" id="commonIssues"></ol>
+        </section>
+
+        <section class="panel advice-panel" aria-labelledby="adviceTitle">
+          <div class="section-heading">
+            <p class="eyebrow">local rules</p>
+            <h2 id="adviceTitle">今日建议</h2>
+          </div>
+          <div class="advice-box" id="adviceBox">点击按钮后，会根据最近 7 天记录生成本地建议。</div>
+          <button class="button primary" id="generateAdviceButton" type="button">生成今日建议</button>
+        </section>
+
+        <section class="panel actions-panel" aria-labelledby="actionsTitle">
+          <div class="section-heading">
+            <p class="eyebrow">testing</p>
+            <h2 id="actionsTitle">记录操作</h2>
+          </div>
+          <div class="button-row">
+            <button class="button secondary" id="fillSampleButton" type="button">填充示例数据</button>
+            <button class="button danger" id="clearButton" type="button">清空所有记录</button>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
